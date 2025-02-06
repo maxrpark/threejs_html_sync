@@ -4,6 +4,10 @@
 
 A demo project demonstrating a way of aligning 3D objects with corresponding DOM elements while maintaining accurate positioning and sizes during scrolling and resizing.
 
+### Live Demo
+
+You can view a live demo of the project here: [LIVE DEMO](https://threejs-html-sync.vercel.app/)
+
 ## Project Setup
 
 First, install the dependencies and start the development server:
@@ -243,4 +247,5 @@ tick();
 By following this approach, we can seamlessly integrate WebGL elements into an HTML-based layout, allowing for smooth animations and interactions. Synchronizing Three.js objects with HTML elements provides endless possibilities for dynamic and engaging user experiences.
 
 This technique can be extended further by incorporating physics simulations, interactive controls, and more refined shader effects. Explore and experiment to create visually stunning web experiences!
+
 # threejs_html_sync
