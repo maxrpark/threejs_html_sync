@@ -1,0 +1,121 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: "Anton";
+  src: url("/fonts/Anton/Anton-Regular.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Barlow Condensed";
+  src: url("/fonts/Barlow_Condensed/BarlowCondensed-Regular.ttf")
+    format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
+
+:root {
+  --primary-color: #1a1a1a;
+  --secondary-color: #dc143c;
+  --font-primary: "Barlow Condensed", sans-serif;
+  --font-secondary: "Anton", sans-serif;
+}
+
+html {
+  overscroll-behavior-y: none;
+}
+
+body {
+  font-family: var(--font-primary);
+  background-color: #1a1a1a;
+}
+
+section {
+  visibility: hidden;
+  margin-bottom: 20vh;
+}
+
+h1 {
+  color: var(--secondary-color);
+}
+
+h1,
+h2 {
+  font-family: var(--font-secondary);
+}
+
+svg {
+  fill: var(--secondary-color);
+}
+
+.main-title {
+  @apply text-[32px] leading-[32px] xl:text-[100px] xl:leading-[100px] 2xl:text-[120px] 2xl:leading-[120px] text-center mb-[20vh] invisible;
+}
+
+.section-title {
+  @apply text-[24px] leading-[24px] xl:text-[50px] xl:leading-[50px]  2xl:text-[80px] 2xl:leading-[80px] mb-10 xl:mb-16;
+}
+
+.content-block {
+  @apply p-4 xl:p-10;
+}
+
+.img-container {
+  @apply mb-10;
+}
+
+.inner-img {
+  @apply w-full object-cover;
+}
+
+.description {
+  @apply text-[18px] leading-6  xl:text-[24px] xl:leading-8 text-[#121212];
+}
+
+/* EXTRA STYLES NOT NECESSARIES */
+
+/* START SCROLLBAR*/
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--primary-color);
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #dc143c;
+  border-radius: 10px;
+  border: 3px solid var(--primary-color);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #555;
+}
+
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--primary-color);
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #dc143c;
+  border-radius: 10px;
+  border: 3px solid var(--primary-color);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #555;
+}
+
+/* Firefox */
+* {
+  scrollbar-color: #dc143c var(--primary-color); /* thumb and track color */
+  scrollbar-width: thin;
+}

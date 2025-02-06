@@ -1,0 +1,30 @@
+{
+  "name": "threejs_html_sync",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@types/dat.gui": "^0.7.13",
+    "@types/three": "^0.173.0",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.5.1",
+    "tailwindcss": "^4.0.3",
+    "typescript": "^5.7.3",
+    "vite": "^6.0.11"
+  },
+  "dependencies": {
+    "@tailwindcss/vite": "^4.0.3",
+    "gsap": "^3.12.7",
+    "lenis": "^1.1.20",
+    "lil-gui": "^0.20.0",
+    "split-type": "^0.3.4",
+    "three": "^0.173.0",
+    "troika-three-text": "^0.52.3",
+    "vite-plugin-glsl": "^1.3.1"
+  }
+}
