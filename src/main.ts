@@ -5,13 +5,15 @@ import { Text, preloadFont } from "troika-three-text";
 import Lenis from "lenis";
 import "lenis/dist/lenis.css";
 
+// shaders
 import vertexShader from "./shaders/commonShader/vertex.glsl";
 import fragmentShader from "./shaders/commonShader/fragment.glsl";
 import imgFragmentShader from "./shaders/imgShader/fragment.glsl";
 import textVertexShader from "./shaders/textShader/vertex.glsl";
 
-import { MeshShaderMaterial } from "./ts/types";
+import { ElementType, MeshShaderMaterial } from "./ts/types";
 
+// Fonts to preload before initializing the scene
 const fontsToPreload = [
   {
     font: "/fonts/Anton/Anton-Regular.ttf",
@@ -23,13 +25,13 @@ const fontsToPreload = [
   },
 ];
 
+// Count fonts loaded to trigger scene initialization
 let preloadCount = 0;
-// Ensure fonts are loaded before initializing the scene
 const onFontLoaded = () => {
   preloadCount++;
   if (preloadCount === fontsToPreload.length) {
     console.log("All fonts preloaded!");
-    initializeScene(); // 🎯 Initialize only when fonts are ready
+    initializeScene(); // Initialize the Three.js scene only when fonts are ready
   }
 };
 
@@ -38,26 +40,28 @@ fontsToPreload.forEach(({ font, characters }) => {
   preloadFont({ font, characters }, onFontLoaded);
 });
 
-// Global Variables
-
+// Global variables
 const sizes = {
   width: window.innerWidth,
   height: window.innerHeight,
   pixelRatio: Math.min(window.devicePixelRatio, 2),
 };
 
+// Mapping font names to font files for easier management
 const fontMap: Record<string, string> = {
   Anton: "/fonts/Anton/Anton-Regular.ttf",
   "Barlow Condensed": "/fonts/Barlow_Condensed/BarlowCondensed-Regular.ttf",
 };
+
+// Arrays to store 3D plane and 2D text objects
 const planesObjects: MeshShaderMaterial[] = [];
 const text2DObjects: THREE.Group[] = [];
+
 const textureLoader = new THREE.TextureLoader();
 
-// Function: Initialize Three.js Scene (only after fonts are preloaded)
+// Initialize Three.js Scene (only after fonts are preloaded)
 const initializeScene = () => {
-  // Get Element Properties
-  const getElementProperties = (element: HTMLDivElement | HTMLImageElement) => {
+  const getElementProperties = (element: ElementType) => {
     const { fontSize, color, backgroundColor, fontFamily } =
       getComputedStyle(element);
 
@@ -79,23 +83,24 @@ const initializeScene = () => {
   // Initialize Lenis
   const lenis = new Lenis({ autoRaf: true });
 
-  // Get HTML Elements
+  // Get the canvas element and HTML elements for 3D objects
   const canvas = document.getElementById("webgl-canvas")!;
   const contentBlocks = document.querySelectorAll(".content-block");
   const innerImages = document.querySelectorAll(".inner-img");
 
-  // Create a div with the class single-character for each character
+  // Split text elements into characters for 3D rendering
   const textElements = new SplitType(".text-reference", {
     types: "chars",
     tagName: "span",
     charClass: "single-character",
   }).chars!;
 
+  // Combine all elements into one array for processing
   const allElements = [
     ...contentBlocks,
     ...innerImages,
     ...textElements,
-  ] as HTMLDivElement[];
+  ] as ElementType[];
 
   // Setup Three.js Scene
   const scene = new THREE.Scene();
@@ -122,6 +127,7 @@ const initializeScene = () => {
 
   // Define Materials & Objects
   const geometry = new THREE.PlaneGeometry(1, 1, 32, 32);
+
   const baseMaterial = new THREE.ShaderMaterial({
     vertexShader,
     uniforms: {
@@ -129,49 +135,84 @@ const initializeScene = () => {
     },
   });
 
-  const createPlane = (element: HTMLDivElement | HTMLImageElement) => {
-    const material = baseMaterial.clone();
+  // This function retrieves a material from the cache or creates a new one based on the element's type and properties, helping avoid cloning the same material multiple times.
+  const materialCache = new Map();
+  const createOrGetMaterial = (element: ElementType) => {
+    let material;
 
     if (element instanceof HTMLImageElement) {
-      material.fragmentShader = imgFragmentShader;
-      material.uniforms.uSample = new THREE.Uniform(
-        textureLoader.load(element.src)
-      );
+      // If element is an image, load the texture and create material if not cached
+      material = materialCache.get(element.src);
+      if (!material) {
+        const clonedMaterial = baseMaterial.clone();
+        clonedMaterial.fragmentShader = imgFragmentShader;
+        clonedMaterial.uniforms.uSample = new THREE.Uniform(
+          textureLoader.load(element.src)
+        );
+        materialCache.set(element.src, clonedMaterial);
+        material = clonedMaterial;
+      }
     } else if (element instanceof HTMLDivElement) {
-      material.fragmentShader = fragmentShader;
+      // For div elements, create material based on background color
       const { backgroundColor } = getElementProperties(element);
-      material.uniforms.uColor = new THREE.Uniform(
-        new THREE.Color(backgroundColor).toArray()
-      );
+
+      material = materialCache.get(`bg-${backgroundColor}`);
+
+      if (!material) {
+        const clonedMaterial = baseMaterial.clone();
+        clonedMaterial.fragmentShader = fragmentShader;
+        clonedMaterial.uniforms.uColor = new THREE.Uniform(
+          new THREE.Color(backgroundColor).toArray()
+        );
+
+        materialCache.set(`bg-${backgroundColor}`, clonedMaterial);
+        material = clonedMaterial;
+      }
+    } else if (element.classList.contains("single-character")) {
+      // For text elements, create material based on color
+      const { color } = getElementProperties(element);
+      material = materialCache.get(`char-${color}`);
+
+      if (!material) {
+        const clonedMaterial = baseMaterial.clone();
+        clonedMaterial.fragmentShader = fragmentShader;
+        clonedMaterial.vertexShader = textVertexShader;
+        clonedMaterial.uniforms.uColor = new THREE.Uniform(
+          new THREE.Color(color).toArray()
+        );
+        materialCache.set(`char-${color}`, clonedMaterial);
+        material = clonedMaterial;
+      }
+    } else {
+      material = baseMaterial.clone();
     }
 
-    const mesh = new THREE.Mesh(geometry, material);
+    return material;
+  };
 
+  // Function to create a 3D plane for a given HTML element
+
+  const createPlane = (element: ElementType) => {
+    const material = createOrGetMaterial(element);
+    const mesh = new THREE.Mesh(geometry, material);
     const { width, height } = element.getBoundingClientRect();
     mesh.scale.set(width, height, 1);
-
     mesh.userData.htmlElement = element;
-
     return mesh;
   };
 
-  const create2DCharacter = (element: HTMLDivElement) => {
-    const material = baseMaterial.clone();
-    material.fragmentShader = fragmentShader;
-    material.vertexShader = textVertexShader;
+  // Function to create a 2D character for text rendering
+  const create2DCharacter = (element: HTMLSpanElement) => {
+    const material = createOrGetMaterial(element);
+    const { fontSize, fontFamily } = getElementProperties(element);
 
-    const { fontSize, color, fontFamily } = getElementProperties(element);
     const textMesh = new Text();
     textMesh.text = element.textContent!;
     textMesh.fontSize = parseFloat(fontSize);
-
     textMesh.font = fontFamily;
     textMesh.material = material;
-    material.uniforms.uColor = new THREE.Uniform(
-      new THREE.Color(color).toArray()
-    );
-
     textMesh.sync();
+
     const group = new THREE.Group();
     group.add(textMesh as unknown as MeshShaderMaterial);
     group.userData.htmlElement = element;
@@ -179,7 +220,7 @@ const initializeScene = () => {
     return group;
   };
 
-  // Create Objects from Elements
+  // Create 3D objects from all elements (planes and 2D text)
   allElements.forEach((element) => {
     let object3D;
     if (!element.classList.contains("single-character")) {
@@ -229,7 +270,7 @@ const initializeScene = () => {
     });
   };
 
-  // Events
+  // Event listeners for scroll and resize
   let ticking = false;
   lenis.on("scroll", () => {
     if (!ticking) {
@@ -255,6 +296,7 @@ const initializeScene = () => {
     renderer.setSize(sizes.width, sizes.height);
     renderer.setPixelRatio(sizes.pixelRatio);
 
+    // Update text font sizes and plane scales on resize
     text2DObjects.forEach((plane) => {
       const { fontSize } = getElementProperties(plane.userData.htmlElement);
       const textMesh = plane.children[0];
@@ -293,7 +335,9 @@ const initializeScene = () => {
     window.requestAnimationFrame(tick);
   };
 
+  // Initial position updates
   updatePlanesPosition(planesObjects);
   updateTexts2DPosition(text2DObjects);
+
   tick();
 };

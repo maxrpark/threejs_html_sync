@@ -141,7 +141,17 @@ For image elements, we use a `PlaneGeometry` mesh and apply a shader material wi
 ```javascript
 const textureLoader = new THREE.TextureLoader();
 const geometry = new THREE.PlaneGeometry(1, 1, 32, 32);
+```
 
+## Get or Create Material.
+
+The createOrGetMaterial function is responsible for managing the creation and reuse of THREE.ShaderMaterial instances. It caches materials based on specific properties of the HTML elements (e.g., image source, background color, or text color) to ensure that the same material is not cloned multiple times, improving performance and reducing memory usage.
+
+For image elements, the function checks the source URL and loads the corresponding texture. For color-based elements (like divs with a background color), it creates a unique material based on that color. If the element represents text, a material is created based on the text's color. If no matching material exists, a new one is created and cached for future use.
+
+By caching materials, we avoid unnecessary cloning, ensuring that the same material is reused across multiple elements with similar properties.
+
+```js
 const baseMaterial = new THREE.ShaderMaterial({
   vertexShader,
   uniforms: {
@@ -149,20 +159,72 @@ const baseMaterial = new THREE.ShaderMaterial({
   },
 });
 
-const createPlane = (element) => {
-  const material = baseMaterial.clone();
-  if (element instanceof HTMLImageElement) {
-    material.fragmentShader = imgFragmentShader;
-    material.uniforms.uSample = new THREE.Uniform(
-      textureLoader.load(element.src)
-    );
-  } else {
-    const { backgroundColor } = getElementProperties(element);
-    material.uniforms.uColor = new THREE.Uniform(
-      new THREE.Color(backgroundColor).toArray()
-    );
-  }
+  const materialCache = new Map<string, THREE.ShaderMaterial>();
+  // This function retrieves a material from the cache or creates a new one based on the element's type and properties, helping avoid cloning the same material multiple times.
+  const createOrGetMaterial = (element: ElementType) => {
+    let material;
+
+    if (element instanceof HTMLImageElement) {
+      material = materialCache.get(element.src); // Keep image texture-based cache
+      if (!material) {
+        const clonedMaterial = baseMaterial.clone();
+        clonedMaterial.fragmentShader = imgFragmentShader;
+        clonedMaterial.uniforms.uSample = new THREE.Uniform(
+          textureLoader.load(element.src)
+        );
+        materialCache.set(element.src, clonedMaterial); // Cache image-based materials
+        material = clonedMaterial;
+      }
+    } else if (element instanceof HTMLDivElement) {
+      const { backgroundColor } = getElementProperties(element);
+
+      // Check if there's already a material with this background color
+      material = materialCache.get(`bg-${backgroundColor}`);
+
+      if (!material) {
+        // If not, create a new one and store it in the cache
+        const clonedMaterial = baseMaterial.clone();
+        clonedMaterial.fragmentShader = fragmentShader;
+        clonedMaterial.uniforms.uColor = new THREE.Uniform(
+          new THREE.Color(backgroundColor).toArray()
+        );
+
+        materialCache.set(`bg-${backgroundColor}`, clonedMaterial); // Cache color-based materials
+        material = clonedMaterial;
+      }
+    } else if (element.classList.contains("single-character")) {
+      const { color } = getElementProperties(element);
+
+      material = materialCache.get(`char-${color}`);
+
+      if (!material) {
+        const clonedMaterial = baseMaterial.clone();
+        clonedMaterial.fragmentShader = fragmentShader;
+        clonedMaterial.vertexShader = textVertexShader;
+        clonedMaterial.uniforms.uColor = new THREE.Uniform(
+          new THREE.Color(color).toArray()
+        );
+
+        materialCache.set(`char-${color}`, clonedMaterial);
+        material = clonedMaterial;
+      }
+    } else {
+      material = baseMaterial.clone();
+    }
+
+    return material;
+  };
+```
+
+### Create Plane
+
+```javascript
+const createPlane = (element: ElementType) => {
+  const material = createOrGetMaterial(element);
   const mesh = new THREE.Mesh(geometry, material);
+  const { width, height } = element.getBoundingClientRect();
+  mesh.scale.set(width, height, 1);
+  mesh.userData.htmlElement = element;
   return mesh;
 };
 ```
@@ -174,15 +236,24 @@ For textual elements, we use `Troika-Three-Text` to render text in 3D space.
 ```javascript
 import { Text } from "troika-three-text";
 
-const create3DText = (element) => {
-  const textMesh = new Text();
-  textMesh.text = element.textContent;
-  const { fontSize, color, fontFamily } = getElementProperties(element);
-  textMesh.fontSize = parseFloat(fontSize);
-  textMesh.font = fontFamily;
-  textMesh.sync();
-  return textMesh;
-};
+  const create2DCharacter = (element: HTMLSpanElement) => {
+    const material = createOrGetMaterial(element);
+
+    const { fontSize, fontFamily } = getElementProperties(element);
+    const textMesh = new Text();
+    textMesh.text = element.textContent!;
+    textMesh.fontSize = parseFloat(fontSize);
+
+    textMesh.font = fontFamily;
+    textMesh.material = material;
+
+    textMesh.sync();
+    const group = new THREE.Group();
+    group.add(textMesh as unknown as MeshShaderMaterial);
+    group.userData.htmlElement = element;
+
+    return group;
+  };
 ```
 
 ## Positioning and Updating Elements

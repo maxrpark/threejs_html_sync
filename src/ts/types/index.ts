@@ -5,3 +5,5 @@ export type MeshShaderMaterial = THREE.Mesh<
   THREE.ShaderMaterial,
   THREE.Object3DEventMap
 >;
+
+export type ElementType = HTMLDivElement | HTMLImageElement | HTMLSpanElement;

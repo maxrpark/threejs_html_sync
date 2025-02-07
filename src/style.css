@@ -56,7 +56,7 @@ svg {
 }
 
 .section-title {
-  @apply text-[24px] leading-[24px] xl:text-[50px] xl:leading-[50px]  2xl:text-[80px] 2xl:leading-[80px] mb-10 xl:mb-16;
+  @apply text-[24px] leading-[24px] xl:text-[50px] xl:leading-[50px]  2xl:text-[80px] 2xl:leading-[80px] mb-10 xl:mb-16 text-center;
 }
 
 .content-block {
