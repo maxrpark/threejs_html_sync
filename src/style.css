@@ -33,6 +33,7 @@ body {
 
 section {
   visibility: hidden;
+  /* opacity: 0; */ /* with opacity 0 instead of visibility user can select an copy the text. */
   margin-bottom: 20vh;
 }
 

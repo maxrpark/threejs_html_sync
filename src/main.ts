@@ -87,6 +87,7 @@ const initializeScene = () => {
   // Create a div with the class single-character for each character
   const textElements = new SplitType(".text-reference", {
     types: "chars",
+    tagName: "span",
     charClass: "single-character",
   }).chars!;
 
