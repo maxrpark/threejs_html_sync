@@ -32,8 +32,9 @@ body {
 }
 
 section {
-  visibility: hidden;
-  /* opacity: 0; */ /* with opacity 0 instead of visibility user can select an copy the text. */
+  /* visibility: hidden; */
+
+  opacity: 0; /* with opacity 0 instead of visibility hidden user can select an copy the text. Also better for screen readers */
   margin-bottom: 20vh;
 }
 
@@ -51,7 +52,7 @@ svg {
 }
 
 .main-title {
-  @apply text-[32px] leading-[32px] xl:text-[100px] xl:leading-[100px] 2xl:text-[120px] 2xl:leading-[120px] text-center mb-[20vh] invisible;
+  @apply text-[32px] leading-[32px] xl:text-[100px] xl:leading-[100px] 2xl:text-[120px] 2xl:leading-[120px] text-center mb-[20vh] opacity-0;
 }
 
 .section-title {

@@ -109,7 +109,32 @@ The second contains descriptive text, which will also be converted into a Three.
 
 This structure allows us to map each HTML component to a corresponding WebGL object, ensuring alignment and dynamic interaction.
 
-### Creating Planes for Images and Sections
+### Visibility Hidden or Opacity 0
+
+Two hide the HTML elements you have two main options: `visibility: hidden` and `opacity: 0`.
+
+Here’s how they differ, especially with regard to **accessibility**:
+
+- **`opacity: 0`**:
+
+  - The element is **still part of the DOM** and accessible to **screen readers**. It remains in the document flow, meaning assistive technologies (like screen readers) can still detect the element and announce its content to users.
+  - It is still **interactive**, meaning users can still focus on and interact with the element, even though it is not visible.
+  - **Use Case**: If you want an element to be hidden from sighted users but still readable by screen readers or interactable by users (e.g., for form fields, links, or text that should remain accessible), **`opacity: 0`** is the better choice.
+
+- **`visibility: hidden`**:
+  - The element is **removed from the accessibility tree** and will **not be detected by screen readers**. It’s effectively invisible to both sighted users and users relying on assistive technologies.
+  - The element is still **part of the layout** and takes up space, but it **cannot be interacted with** (i.e., you can’t focus on it or click it).
+  - **Use Case**: If you want an element to be completely invisible and non-interactive to both sighted users and assistive technologies, **`visibility: hidden`** is the better choice.
+
+### Which to Use for Accessibility?
+
+- **For screen readers**: If you want content (like text) to remain **readable** by screen readers, **`opacity: 0`** is the preferred option.
+
+- **For non-interactivity**: If you need to hide elements completely, making them **inaccessible to both sighted users and screen readers**, **`visibility: hidden`** might be more appropriate. However, keep in mind that this could create gaps in the experience for users who rely on assistive technologies.
+
+In this project, it used **`opacity: 0`**.
+
+## Creating Planes for Images and Sections
 
 For image elements, we use a `PlaneGeometry` mesh and apply a shader material with a texture loaded from the corresponding image source.
 
