@@ -110,7 +110,6 @@ const initializeScene = () => {
   // Camera Setup
 
   // Calculating the FOV for the Perspective camera
-  // This method ensures that the camera’s field of view (FOV) adjusts dynamically to fit the screen height.
   //https://github.com/mrdoob/three.js/issues/1239
 
   const positionZ = 100;
